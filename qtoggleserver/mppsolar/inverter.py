@@ -28,18 +28,21 @@ class MPPSolarInverter(PolledPeripheral):
         *,
         serial_port: str,
         serial_baud: int = DEFAULT_BAUD,
-        status_properties: Optional[List[str]] = None,
+        properties: Optional[List[str]] = None,
         **kwargs
     ) -> None:
 
         self._mpp_utils = mppUtils(serial_port, serial_baud)
         self._status: Dict[str, List[str]] = {}
-        self._status_property_names: Optional[List[str]] = status_properties
+        self._device_mode: Optional[str] = None
+        self._property_names: Optional[List[str]] = properties
 
         super().__init__(**kwargs)
 
     def read_status(self) -> None:
         self._status = self._mpp_utils.getResponseDict('QPIGS')
+        response = self._mpp_utils.getResponseDict('QMOD')
+        self._device_mode = response['device_mode'][0].lower().replace(' ', '_')
 
     async def poll(self) -> None:
         try:
@@ -52,17 +55,23 @@ class MPPSolarInverter(PolledPeripheral):
     def get_status_property(self, name: str) -> Optional[List[str]]:
         return self._status.get(name)
 
+    def get_device_mode(self) -> Optional[str]:
+        return self._device_mode
+
     async def make_port_args(self) -> List[Dict[str, Any]]:
-        from .ports import BooleanStatusPort, NumberStatusPort
+        from .ports import BooleanStatusPort, NumberStatusPort, DeviceModePort
 
         commands = mppinverter.getCommandsFromJson(inverter_model='standard')
         qpigs_cmd = next(c for c in commands if c.name == 'QPIGS')
 
-        port_args = []
+        port_args = [
+            DeviceModePort
+        ]
+
         for _type, display_name, unit in qpigs_cmd.response_definition:
             if _type == 'flags':
                 for n in unit:
-                    if self._status_property_names and n not in self._status_property_names:
+                    if self._property_names and n not in self._property_names:
                         continue
 
                     port_args.append({
@@ -73,7 +82,7 @@ class MPPSolarInverter(PolledPeripheral):
 
             elif _type in ('int', 'float'):
                 name = display_name.lower().replace(' ', '_')
-                if self._status_property_names and name not in self._status_property_names:
+                if self._property_names and name not in self._property_names:
                     continue
 
                 port_args.append({
