@@ -1,14 +1,17 @@
 
 import asyncio
 import logging
+import re
 
 from typing import Any, Dict, List, Optional
 
-from mppsolar import mppUtils
-from mppsolar import mppinverter
 from qtoggleserver.lib.polled import PolledPeripheral
+from qtoggleserver.utils import json as json_utils
 
+from . import commands
 from .exceptions import MPPSolarTimeout
+from .io import BaseIO, HIDRawIO, SerialIO
+from .typing import Properties, Property
 
 
 logger = logging.getLogger(__name__)
@@ -19,7 +22,19 @@ class MPPSolarInverter(PolledPeripheral):
     RETRY_POLL_INTERVAL = 5
 
     DEFAULT_BAUD = 2400
+    DEFAULT_MODEL = 'default'
     TIMEOUT = 10
+
+    # Filter out properties that we don't really want exposed
+    BLACKLISTED_PROPERTIES = {
+        'has_sbu_priority',
+        'is_configuration_status_changed',
+        'is_scc_firmware_updated',
+        'is_battery_voltage_too_steady_while_charging',
+        'battery_voltage_offset_fans',
+        'eeprom_version',
+        'is_dustproof_installed'
+    }
 
     logger = logger
 
@@ -28,68 +43,110 @@ class MPPSolarInverter(PolledPeripheral):
         *,
         serial_port: str,
         serial_baud: int = DEFAULT_BAUD,
-        properties: Optional[List[str]] = None,
+        model: str = DEFAULT_MODEL,
         **kwargs
     ) -> None:
 
-        self._mpp_utils = mppUtils(serial_port, serial_baud)
-        self._status: Dict[str, List[str]] = {}
-        self._device_mode: Optional[str] = None
-        self._property_names: Optional[List[str]] = properties
+        self._serial_port: str = serial_port
+        self._serial_baud: int = serial_baud
+        self._model: str = model
+
+        self._status: Dict[str, Property] = {}
 
         super().__init__(**kwargs)
 
-    def read_status(self) -> None:
-        self._status = self._mpp_utils.getResponseDict('QPIGS')
-        response = self._mpp_utils.getResponseDict('QMOD')
-        self._device_mode = response['device_mode'][0].lower().replace(' ', '_')
+    def make_io(self) -> BaseIO:
+        if re.match(r'.*hidraw\d+', self._serial_port):
+            return HIDRawIO(self._serial_port)
+
+        else:
+            return SerialIO(self._serial_port, self._serial_baud)
+
+    async def run_command(self, io: BaseIO, name: str, **params) -> Properties:
+        if params:
+            params_str = ', '.join(f'{k}={json_utils.dumps(v)}' for k, v in params.items())
+            self.debug('running command %s(%s)', name, params_str)
+
+        else:
+            self.debug('running command %s', name)
+
+        cmd = commands.make_command(name, self._model, **params)
+        request = cmd.prepare_request()
+        io.write(request)
+        response = await io.read(self.TIMEOUT)
+        parsed_response = cmd.parse_response(response)
+
+        self.debug('got response to command %s', name)
+
+        return parsed_response
+
+    async def read_status(self) -> None:
+        io = self.make_io()
+
+        # Read status using QPIGS command
+        self._status.update(await self.run_command(io, 'QPIGS'))
+
+        # Read device mode using QMOD command
+        self._status.update(await self.run_command(io, 'QMOD'))
+
+        io.close()
 
     async def poll(self) -> None:
         try:
-            future = self.run_threaded(self.read_status)
-            await asyncio.wait_for(future, timeout=self.TIMEOUT)
+            await self.read_status()
 
         except asyncio.TimeoutError as e:
-            raise MPPSolarTimeout('Timeout waiting for response from inverter') from e
+            raise MPPSolarTimeout('Timeout reading inverter status') from e
 
-    def get_status_property(self, name: str) -> Optional[List[str]]:
+    def get_status_property(self, name: str) -> Optional[Property]:
         return self._status.get(name)
 
-    def get_device_mode(self) -> Optional[str]:
-        return self._device_mode
-
     async def make_port_args(self) -> List[Dict[str, Any]]:
-        from .ports import BooleanStatusPort, NumberStatusPort, DeviceModePort
+        from .ports import BooleanStatusPort, NumberStatusPort, StringStatusPort
 
-        commands = mppinverter.getCommandsFromJson(inverter_model='standard')
-        qpigs_cmd = next(c for c in commands if c.name == 'QPIGS')
+        port_args = []
 
-        port_args = [
-            DeviceModePort
-        ]
+        command_classes = commands.get_command_classes(self._model)
+        status_command_classes = []
 
-        for _type, display_name, unit in qpigs_cmd.response_definition:
-            if _type == 'flags':
-                for n in unit:
-                    if self._property_names and n not in self._property_names:
-                        continue
+        qpigs_command = command_classes.get('QPIGS')
+        if qpigs_command:
+            status_command_classes.append(qpigs_command)
 
-                    port_args.append({
-                        'driver': BooleanStatusPort,
-                        'property_name': n,
-                        'display_name': n.replace('_', ' ').title()
-                    })
+        qmod_command = command_classes.get('QMOD')
+        if qmod_command:
+            status_command_classes.append(qmod_command)
 
-            elif _type in ('int', 'float'):
-                name = display_name.lower().replace(' ', '_')
-                if self._property_names and name not in self._property_names:
+        for command_class in status_command_classes:
+            for name, details in command_class.get_response_property_definitions().items():
+                if name in self.BLACKLISTED_PROPERTIES:
                     continue
 
-                port_args.append({
-                    'driver': NumberStatusPort,
-                    'property_name': name,
-                    'display_name': display_name,
-                    'unit': unit
-                })
+                _type = details['type']
+
+                if _type == 'bool':
+                    port_args.append({
+                        'driver': BooleanStatusPort,
+                        'property_name': name,
+                        'display_name': details['display_name']
+                    })
+
+                elif _type in ('int', 'float'):
+                    port_args.append({
+                        'driver': NumberStatusPort,
+                        'property_name': name,
+                        'display_name': details['display_name'],
+                        'unit': details['unit'],
+                        'choices': details['choices']
+                    })
+
+                elif _type == 'str':
+                    port_args.append({
+                        'driver': StringStatusPort,
+                        'property_name': name,
+                        'display_name': details['display_name'],
+                        'unit': details['unit'],
+                        'choices': details['choices']
+                    })
 
         return port_args

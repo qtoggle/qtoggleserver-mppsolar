@@ -1,7 +1,7 @@
 
 import abc
 
-from typing import cast
+from typing import Any, cast, Dict, List, Optional
 
 from qtoggleserver.core.typing import NullablePortValue
 from qtoggleserver.lib.polled import PolledPort
@@ -25,52 +25,42 @@ class StatusPort(MPPSolarPort):
     def make_id(self) -> str:
         return self._property_name
 
+    async def read_value(self) -> NullablePortValue:
+        return self.get_peripheral().get_status_property(self._property_name)
+
 
 class BooleanStatusPort(StatusPort):
     TYPE = 'boolean'
-
-    async def read_value(self) -> NullablePortValue:
-        prop = self.get_peripheral().get_status_property(self._property_name)
-        if prop:
-            return bool(prop[0])
 
 
 class NumberStatusPort(StatusPort):
     TYPE = 'number'
 
-    def __init__(self, *, unit: str, **kwargs) -> None:
+    def __init__(self, *, unit: str, choices: Optional[List[Dict[str, Any]]], **kwargs) -> None:
         super().__init__(**kwargs)
 
         self._unit: str = unit
-
-    async def read_value(self) -> NullablePortValue:
-        prop = self.get_peripheral().get_status_property(self._property_name)
-        if prop:
-            return float(prop[0])
+        self._choices: Optional[List[Dict[str, Any]]] = choices
 
 
-class DeviceModePort(MPPSolarPort):
-    ID = 'device_mode'
-    DISPLAY_NAME = 'Device Mode'
+class StringStatusPort(StatusPort):
     TYPE = 'number'
-    CHOICES = [
-        {'value': 0, 'display_name': 'Power On'},
-        {'value': 1, 'display_name': 'Stand-by'},
-        {'value': 2, 'display_name': 'Line'},
-        {'value': 3, 'display_name': 'Battery'},
-        {'value': 4, 'display_name': 'Fault'},
-        {'value': 5, 'display_name': 'Power Saving'}
-    ]
 
-    _MODE_MAPPING = {
-        'power_on': 0,
-        'standby': 1,
-        'line': 2,
-        'battery': 3,
-        'fault': 4,
-        'power_saving': 5
-    }
+    def __init__(self, *, unit: str, choices: List[Dict[str, Any]], **kwargs) -> None:
+        super().__init__(**kwargs)
+
+        # Associate a number to each choice value, since we can't deal with string values
+        self._value_mapping: Dict[str, int] = {}
+        adapted_choices = []
+        for i, choice in enumerate(choices):
+            adapted_choice = dict(choice, value=i)
+            adapted_choices.append(adapted_choice)
+            self._value_mapping[choice['value']] = i
+
+        self._unit: str = unit
+        self._choices: List[Dict[str, Any]] = adapted_choices
 
     async def read_value(self) -> NullablePortValue:
-        mode = self.get_peripheral().get_device_mode()
-        return self._MODE_MAPPING.get(mode)
+        value = self.get_peripheral().get_status_property(self._property_name)
+        if value is not None:
+            return self._value_mapping[value]
