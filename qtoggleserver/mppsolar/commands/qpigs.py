@@ -48,7 +48,8 @@ class QPIGS(Command):
         'pv_current': 'A',
         'pv_voltage': 'V',
         'scc_voltage': 'V',
-        'battery_discharging_current': 'A'
+        'battery_discharging_current': 'A',
+        'pv_power': 'W'
     }
 
     DISPLAY_NAMES = {
@@ -75,7 +76,15 @@ class QPIGS(Command):
         'is_battery_voltage_too_steady_while_charging': 'Battery Voltage Too Steady While Charging',
         'is_battery_charging': 'Battery Charging',
         'is_battery_charging_from_scc': 'Battery Charging From SCC',
-        'is_battery_charging_from_ac_input': 'Battery Charging From AC Input'
+        'is_battery_charging_from_ac_input': 'Battery Charging From AC Input',
+        'pv_power': 'PV Power'
+    }
+
+    VIRTUAL_PROPERTIES = {
+        'pv_power': {
+            'value': lambda properties: properties.get('pv_current', 0) * properties.get('pv_voltage', 0),
+            'type': 'float'
+        }
     }
 
 
@@ -121,10 +130,6 @@ class QPIGS_LV(QPIGS):
             'type': 'bool'
         }
     }
-
-    UNITS = dict(QPIGS.UNITS, **{
-        'pv_power': 'W'
-    })
 
     DISPLAY_NAMES = dict(QPIGS.DISPLAY_NAMES, **{
         'is_scc_active': 'SCC Active',
@@ -172,15 +177,13 @@ class QPIGS_GKMK(QPIGS):
     )
 
     UNITS = dict(QPIGS.UNITS, **{
-        'battery_voltage_offset_fans': '10mV',
-        'pv_power': 'W'
+        'battery_voltage_offset_fans': '10mV'
     })
 
     DISPLAY_NAMES = dict(QPIGS.DISPLAY_NAMES, **{
         'is_ac_output_from_ac_input_or_pv': 'AC Output From AC Input/PV',
         'battery_voltage_offset_fans': 'Battery Voltage Offset Fans',
         'eeprom_version': 'EEPROM Version',
-        'pv_power': 'PV Power',
         'is_battery_float_charging': 'Battery Float-charging',
         'is_turned_on': 'Turned On',
         'is_dustproof_installed': 'Dustproof Installed'
