@@ -27,6 +27,7 @@ peripherals = [
         serial_port = "/dev/ttyUSB0"    # use /dev/hidraw0 if using the USB connection
         serial_baud = 2400              # this is the default
         model = "GK"                    # model letters found in inverter model (e.g. "GK" for "PIP 5048GK")
+        blacklist_properties = [...]    # optional list of property names to be excluded
     }
     ...
 ]

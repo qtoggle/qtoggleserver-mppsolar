@@ -3,7 +3,7 @@ import asyncio
 import logging
 import re
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
 from qtoggleserver.lib.polled import PolledPeripheral
 from qtoggleserver.utils import json as json_utils
@@ -44,12 +44,14 @@ class MPPSolarInverter(PolledPeripheral):
         serial_port: str,
         serial_baud: int = DEFAULT_BAUD,
         model: str = DEFAULT_MODEL,
+        blacklist_properties: Optional[List[str]] = None,
         **kwargs
     ) -> None:
 
         self._serial_port: str = serial_port
         self._serial_baud: int = serial_baud
         self._model: str = model
+        self._blacklist_properties: Set[str] = set(blacklist_properties or [])
 
         self._status: Dict[str, Property] = {}
 
@@ -120,6 +122,9 @@ class MPPSolarInverter(PolledPeripheral):
         for command_class in status_command_classes:
             for name, details in command_class.get_response_property_definitions().items():
                 if name in self.BLACKLISTED_PROPERTIES:
+                    continue
+
+                if name in self._blacklist_properties:
                     continue
 
                 _type = details['type']
