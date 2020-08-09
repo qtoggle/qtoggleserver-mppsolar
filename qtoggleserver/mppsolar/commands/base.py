@@ -64,8 +64,8 @@ class Command:
 
         parsed_dict = {}
         for name, value in match.groupdict().items():
-            _type, name = name.split('_', 1)
-            parsed_dict[name] = self._TYPE_MAP[_type](value)
+            type_, name = name.split('_', 1)
+            parsed_dict[name] = self._TYPE_MAP[type_](value)
 
         # Add virtual properties
         for name, details in self.VIRTUAL_PROPERTIES.items():
@@ -89,14 +89,14 @@ class Command:
             }
             cls._response_property_definitions = {
                 name: {
-                    'type': type_mapping.get(_type, _type),
+                    'type': type_mapping.get(type_, type_),
                     'unit': cls.UNITS.get(name),
                     'display_name': cls.DISPLAY_NAMES.get(name),
                     'choices': [
                         {'value': choice[0], 'display_name': choice[1]}
                         for choice in cls.CHOICES[name]
                     ] if name in cls.CHOICES else None
-                } for name, _type in matches if not name.startswith('_')
+                } for name, type_ in matches if not name.startswith('_')
             }
 
         return cls._response_property_definitions

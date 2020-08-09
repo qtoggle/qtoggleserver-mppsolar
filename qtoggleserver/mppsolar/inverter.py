@@ -127,16 +127,16 @@ class MPPSolarInverter(PolledPeripheral):
                 if name in self._blacklist_properties:
                     continue
 
-                _type = details['type']
+                type_ = details['type']
 
-                if _type == 'bool':
+                if type_ == 'bool':
                     port_args.append({
                         'driver': BooleanStatusPort,
                         'property_name': name,
                         'display_name': details['display_name']
                     })
 
-                elif _type in ('int', 'float'):
+                elif type_ in ('int', 'float'):
                     port_args.append({
                         'driver': NumberStatusPort,
                         'property_name': name,
@@ -145,7 +145,7 @@ class MPPSolarInverter(PolledPeripheral):
                         'choices': details['choices']
                     })
 
-                elif _type == 'str':
+                elif type_ == 'str':
                     port_args.append({
                         'driver': StringStatusPort,
                         'property_name': name,
