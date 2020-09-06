@@ -16,18 +16,38 @@ Install using pip:
 
 ## Usage
 
+### Serial Connection
+
 ##### `qtoggleserver.conf:`
 ``` ini
 ...
 peripherals = [
     ...
     {
-        driver = "qtoggleserver.mppsolar.MPPSolarInverter"
+        driver = "qtoggleserver.mppsolar.SerialMPPSolarInverter"
         name = "myinverter"             # an optional name of your choice
         serial_port = "/dev/ttyUSB0"    # use /dev/hidraw0 if using the USB connection
         serial_baud = 2400              # this is the default
         model = "GK"                    # model letters found in inverter model (e.g. "GK" for "PIP 5048GK")
         blacklist_properties = [...]    # optional list of property names to be excluded
+    }
+    ...
+]
+...
+```
+
+### Bluetooth Connection
+
+##### `qtoggleserver.conf:`
+``` ini
+...
+peripherals = [
+    ...
+    {
+        driver = "qtoggleserver.mppsolar.BluetoothMPPSolarInverter"
+        name = "myinverter"             # an optional name of your choice
+        address = "00:1A:22:AA:BB:CC"   # bluetooth address of the device
+        model = "GK"                    # model letters found in inverter model (e.g. "GK" for "PIP 5048GK")
     }
     ...
 ]
