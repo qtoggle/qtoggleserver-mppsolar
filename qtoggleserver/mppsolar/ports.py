@@ -36,17 +36,17 @@ class BooleanStatusPort(StatusPort):
 class NumberStatusPort(StatusPort):
     TYPE = 'number'
 
-    def __init__(self, *, unit: str, choices: Optional[List[Dict[str, Any]]], **kwargs) -> None:
+    def __init__(self, *, unit: Optional[str] = None, choices: Optional[List[Dict[str, Any]]] = None, **kwargs) -> None:
         super().__init__(**kwargs)
 
-        self._unit: str = unit
+        self._unit: Optional[str] = unit
         self._choices: Optional[List[Dict[str, Any]]] = choices
 
 
 class StringStatusPort(StatusPort):
     TYPE = 'number'
 
-    def __init__(self, *, unit: str, choices: List[Dict[str, Any]], **kwargs) -> None:
+    def __init__(self, *, unit: Optional[str] = None, choices: List[Dict[str, Any]], **kwargs) -> None:
         super().__init__(**kwargs)
 
         # Associate a number to each choice value, since we can't deal with string values
@@ -57,7 +57,7 @@ class StringStatusPort(StatusPort):
             adapted_choices.append(adapted_choice)
             self._value_mapping[choice['value']] = i
 
-        self._unit: str = unit
+        self._unit: Optional[str] = unit
         self._choices: List[Dict[str, Any]] = adapted_choices
 
     async def read_value(self) -> NullablePortValue:
