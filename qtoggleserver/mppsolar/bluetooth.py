@@ -154,5 +154,23 @@ class BluetoothMPPSolarInverter(MPPSolarInverter, ble.BLEPeripheral):
                 'property_name': 'mode',
                 'display_name': 'Inverter Mode',
                 'choices': [{'value': c[0], 'display_name': c[1]} for c in constants.MODE_CHOICES]
+            },
+            {
+                'driver': NumberStatusPort,
+                'property_name': 'pv_current',
+                'display_name': 'PV Current',
+                'unit': 'A'
+            },
+            {
+                'driver': NumberStatusPort,
+                'property_name': 'pv_voltage',
+                'display_name': 'PV Voltage',
+                'unit': 'V'
+            },
+            {
+                'driver': NumberStatusPort,
+                'property_name': 'pv_power',
+                'display_name': 'PV Power',
+                'unit': 'W'
             }
         ]
