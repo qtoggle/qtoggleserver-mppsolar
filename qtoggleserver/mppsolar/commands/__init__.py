@@ -4,11 +4,13 @@ from typing import Dict, Optional, Type
 from .base import Command
 from .qmod import QMOD
 from .qpigs import QPIGS, QPIGS_LV, QPIGS_GKMK
+from .qpigs2 import QPIGS2, QPIGS2_MAX
 
 
 DEFAULT_COMMANDS = {
     'QMOD': QMOD,
-    'QPIGS': QPIGS
+    'QPIGS': QPIGS,
+    'QPIGS2': QPIGS2
 }
 
 COMMANDS_BY_MODEL = {
@@ -20,6 +22,9 @@ COMMANDS_BY_MODEL = {
     },
     'MK': {
         'QPIGS': QPIGS_GKMK
+    },
+    'MAX': {
+        'QPIGS2': QPIGS2_MAX
     }
 }
 

@@ -63,6 +63,10 @@ class SerialMPPSolarInverter(MPPSolarInverter):
             self.debug('running command %s', name)
 
         cmd = commands.make_command(name, self._model, **params)
+        # Don't run empty commands
+        if not cmd.REQUEST_FMT:
+            return {}
+
         request = cmd.prepare_request()
         io.write(request)
         response = await io.read(self.TIMEOUT)
@@ -78,6 +82,9 @@ class SerialMPPSolarInverter(MPPSolarInverter):
         # Read status using QPIGS command
         self._status.update(await self.run_command(io, 'QPIGS'))
 
+        # Read status using QPIGS2 command
+        self._status.update(await self.run_command(io, 'QPIGS2'))
+
         # Read device mode using QMOD command
         self._status.update(await self.run_command(io, 'QMOD'))
 
@@ -92,6 +99,10 @@ class SerialMPPSolarInverter(MPPSolarInverter):
         qpigs_command = command_classes.get('QPIGS')
         if qpigs_command:
             status_command_classes.append(qpigs_command)
+
+        qpigs2_command = command_classes.get('QPIGS2')
+        if qpigs2_command:
+            status_command_classes.append(qpigs2_command)
 
         qmod_command = command_classes.get('QMOD')
         if qmod_command:
