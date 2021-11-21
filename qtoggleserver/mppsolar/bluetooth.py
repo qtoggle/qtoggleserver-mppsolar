@@ -10,6 +10,8 @@ from qtoggleserver.lib import ble
 from . import constants
 from . import ports as mppsolarports
 from .inverter import MPPSolarInverter
+from .typing import Property
+
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +41,7 @@ class BluetoothMPPSolarInverter(MPPSolarInverter, ble.BLEPeripheral):
 
     logger = logger
 
-    async def read_status(self) -> None:
+    async def read_properties(self) -> None:
         data = await self.read(self.STATUS1_HANDLE)
         self.parse_status1_data(data)
 
@@ -48,6 +50,9 @@ class BluetoothMPPSolarInverter(MPPSolarInverter, ble.BLEPeripheral):
 
         data = await self.read(self.PV1_STATUS_HANDLE)
         self.parse_pv1_status_data(data)
+
+    async def set_property(self, name: str, value: Property) -> None:
+        pass  # TODO: implement me
 
     def parse_status1_data(self, data: bytes) -> None:
         (
