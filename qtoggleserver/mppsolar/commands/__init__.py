@@ -5,6 +5,15 @@ from .base import Command
 from .mchgc import MCHGC
 from .mnchgc import MNCHGC_Parallel, MNCHGC_Single
 from .muchgc import MUCHGC_Single, MUCHGC_Parallel
+from .pbatmaxdisc import PBATMAXDISC
+from .pbcv import PBCV
+from .pbdv import PBDV
+from .pbft import PBFT
+from .pbt import PBT
+from .pcp import PCP
+from .pcvv import PCVV
+from .pop import POP
+from .psdv import PSDV
 from .qmchgcr import QMCHGCR
 from .qmuchgcr import QMUCHGCR
 from .qmod import QMOD
@@ -17,6 +26,14 @@ COMMANDS_BY_MODEL = {
     'GK': [
         MNCHGC_Single,
         MUCHGC_Single,
+        PBCV,
+        PBDV,
+        PBFT,
+        PBT,
+        PCP,
+        PCVV,
+        POP,
+        PSDV,
         QMCHGCR,
         QMUCHGCR,
         QMOD,
@@ -25,6 +42,14 @@ COMMANDS_BY_MODEL = {
     ],
     'LV': [
         MNCHGC_Single,
+        PBCV,
+        PBDV,
+        PBFT,
+        PBT,
+        PCP,
+        PCVV,
+        POP,
+        PSDV,
         QMCHGCR,
         QMOD,
         QPIGS_LV,
@@ -33,9 +58,18 @@ COMMANDS_BY_MODEL = {
         MCHGC,
         MNCHGC_Parallel,
         MUCHGC_Parallel,
+        PBATMAXDISC,
+        PBCV,
+        PBDV,
+        PBFT,
+        PBT,
+        PCP,
+        PCVV,
+        POP,
+        PSDV,
         QMCHGCR,
-        QMUCHGCR,
         QMOD,
+        QMUCHGCR,
         QPIGS,
         QPIGS2_MAX,
         QPIRI_MAX,
@@ -43,6 +77,14 @@ COMMANDS_BY_MODEL = {
     'MK': [
         MNCHGC_Parallel,
         MUCHGC_Parallel,
+        PBCV,
+        PBDV,
+        PBFT,
+        PBT,
+        PCP,
+        PCVV,
+        POP,
+        PSDV,
         QMCHGCR,
         QMOD,
         QPIGS_GKMK,

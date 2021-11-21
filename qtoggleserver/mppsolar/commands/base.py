@@ -44,7 +44,7 @@ class Command:
 
     @classmethod
     def get_name(cls) -> str:
-        return cls.__name__
+        return cls.__name__.split('_')[0]
 
     def prepare_request(self) -> bytes:
         message = self.REQUEST_FMT.format(**self._params)

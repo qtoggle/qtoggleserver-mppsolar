@@ -75,7 +75,6 @@ class SerialMPPSolarInverter(MPPSolarInverter):
         request = cmd.prepare_request()
         io.write(request)
         response = await io.read(self.TIMEOUT)
-        self.debug('got response to command %s: %s', cls.get_name(), response)  # TODO: !!!
         parsed_response = cmd.parse_response(response)
 
         return parsed_response
