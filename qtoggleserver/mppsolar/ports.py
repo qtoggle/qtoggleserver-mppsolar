@@ -3,37 +3,39 @@ import abc
 
 from typing import Any, cast, Dict, List, Optional
 
-from qtoggleserver.core.typing import NullablePortValue
+from qtoggleserver.core.typing import NullablePortValue, PortValue
 from qtoggleserver.lib.polled import PolledPort
 
 from .inverter import MPPSolarInverter
 
 
 class MPPSolarPort(PolledPort, metaclass=abc.ABCMeta):
-    def get_peripheral(self) -> MPPSolarInverter:
-        return cast(MPPSolarInverter, super().get_peripheral())
-
-
-class StatusPort(MPPSolarPort):
-    def __init__(self, *, property_name: str, display_name: str, **kwargs) -> None:
+    def __init__(self, *, property_name: str, display_name: str, writable: bool, **kwargs) -> None:
         self._property_name: str = property_name
 
         super().__init__(**kwargs)
 
         self._display_name: str = display_name
+        self._writable: bool = writable
+
+    def get_peripheral(self) -> MPPSolarInverter:
+        return cast(MPPSolarInverter, super().get_peripheral())
 
     def make_id(self) -> str:
         return self._property_name
 
     async def read_value(self) -> NullablePortValue:
-        return self.get_peripheral().get_status_property(self._property_name)
+        return self.get_peripheral().get_property(self._property_name)
+
+    async def write_value(self, value: PortValue) -> None:
+        await self.get_peripheral().set_property(self._property_name, value)
 
 
-class BooleanStatusPort(StatusPort):
+class BooleanPort(MPPSolarPort):
     TYPE = 'boolean'
 
 
-class NumberStatusPort(StatusPort):
+class NumberPort(MPPSolarPort):
     TYPE = 'number'
 
     def __init__(self, *, unit: Optional[str] = None, choices: Optional[List[Dict[str, Any]]] = None, **kwargs) -> None:
@@ -43,7 +45,7 @@ class NumberStatusPort(StatusPort):
         self._choices: Optional[List[Dict[str, Any]]] = choices
 
 
-class StringStatusPort(StatusPort):
+class StringPort(MPPSolarPort):
     TYPE = 'number'
 
     def __init__(self, *, unit: Optional[str] = None, choices: List[Dict[str, Any]], **kwargs) -> None:
@@ -61,6 +63,6 @@ class StringStatusPort(StatusPort):
         self._choices: List[Dict[str, Any]] = adapted_choices
 
     async def read_value(self) -> NullablePortValue:
-        value = self.get_peripheral().get_status_property(self._property_name)
+        value = self.get_peripheral().get_property(self._property_name)
         if value is not None:
             return self._value_mapping[value]

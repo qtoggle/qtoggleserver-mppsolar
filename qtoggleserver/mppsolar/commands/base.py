@@ -2,10 +2,13 @@
 import ctypes
 import re
 
-from typing import Optional
+from typing import Optional, Tuple
 
 from ..exceptions import MPPSolarException
 from ..typing import Properties, PropertyDefinitions
+
+
+SUFFIXES = ('__choices',)
 
 
 class CommandException(MPPSolarException):
@@ -23,6 +26,7 @@ class Command:
     UNITS = {}
     DISPLAY_NAMES = {}
     CHOICES = {}
+    REQUEST_DEFAULT_VALUES = {}
 
     _TYPE_MAP = {
         'int': int,
@@ -31,14 +35,19 @@ class Command:
         'str': str
     }
 
-    _response_regex: Optional[re.Pattern] = None
+    _response_regex: Optional[Tuple[Optional[re.Pattern], re.Pattern]] = None
+    _request_property_definitions: Optional[PropertyDefinitions] = None
     _response_property_definitions: Optional[PropertyDefinitions] = None
 
     def __init__(self, **params) -> None:
         self._params = params
 
+    @classmethod
+    def get_name(cls) -> str:
+        return cls.__name__.split('_')[0]
+
     def prepare_request(self) -> bytes:
-        message = self.REQUEST_FMT.format(self._params)
+        message = self.REQUEST_FMT.format(**self._params)
         return message.encode() + self.compute_crc(message) + b'\r'
 
     def parse_response(self, response: bytes) -> Properties:
@@ -57,15 +66,25 @@ class Command:
 
         response = response[1:]  # Get rid of start byte '('
 
-        regex = self.get_response_regex()
-        match = regex.match(response)
-        if not match:
-            raise ResponseError('Unexpected response format')
+        split_pat, values_pat = self.get_response_regex()
+        if split_pat:
+            parts = split_pat.split(response)
+        else:
+            parts = [response]
 
         parsed_dict = {}
-        for name, value in match.groupdict().items():
-            type_, name = name.split('_', 1)
-            parsed_dict[name] = self._TYPE_MAP[type_](value)
+        for part in parts:
+            match = values_pat.match(part)
+            if not match:
+                raise ResponseError('Unexpected response format')
+
+            for name, value in match.groupdict().items():
+                type_, name = name.split('_', 1)
+                parsed_value = self._TYPE_MAP[type_](value)
+                if split_pat:
+                    parsed_dict.setdefault(name, []).append(parsed_value)
+                else:
+                    parsed_dict[name] = parsed_value
 
         # Add virtual properties
         for name, details in self.VIRTUAL_PROPERTIES.items():
@@ -77,9 +96,27 @@ class Command:
         return parsed_dict
 
     @classmethod
+    def get_request_property_definitions(cls) -> PropertyDefinitions:
+        if cls._request_property_definitions is None:
+            matches = re.findall(r'{([^:]+):([.0-9dfbs]+)}', cls.REQUEST_FMT)
+            cls._request_property_definitions = {
+                name: {
+                    'format': format_
+                } for name, format_ in matches if not name.startswith('_')
+            }
+
+        return cls._request_property_definitions
+
+    @classmethod
     def get_response_property_definitions(cls) -> PropertyDefinitions:
         if cls._response_property_definitions is None:
-            matches = re.findall(r'{([^:]+):([dfbs])}', cls.RESPONSE_FMT)
+            is_list = False
+            response_fmt = cls.RESPONSE_FMT
+            if response_fmt.endswith('...'):
+                is_list = True
+                response_fmt = response_fmt[:-3]
+
+            matches = re.findall(r'{([^:]+):([dfbs])}', response_fmt)
             matches += [(name, details['type']) for name, details in cls.VIRTUAL_PROPERTIES.items()]
             type_mapping = {
                 'd': 'int',
@@ -88,8 +125,10 @@ class Command:
                 's': 'str'
             }
             cls._response_property_definitions = {
-                name: {
+                re.sub('|'.join(SUFFIXES), '', name): {
                     'type': type_mapping.get(type_, type_),
+                    'is_list': is_list,
+                    'is_choices': name.endswith('__choices'),
                     'unit': cls.UNITS.get(name),
                     'display_name': cls.DISPLAY_NAMES.get(name),
                     'choices': [
@@ -102,15 +141,28 @@ class Command:
         return cls._response_property_definitions
 
     @classmethod
-    def get_response_regex(cls) -> re.Pattern:
+    def has_response_properties(cls) -> bool:
+        for details in cls.get_response_property_definitions().values():
+            if not details['is_choices']:
+                return True
+
+        return False
+
+    @classmethod
+    def get_response_regex(cls) -> Tuple[Optional[re.Pattern], re.Pattern]:
         if cls._response_regex is None:
             pat = cls.RESPONSE_FMT
+            is_list = False
+            if pat.endswith('...'):
+                pat = pat[:-3]
+                is_list = True
+            pat = re.sub('|'.join(SUFFIXES), '', pat)
             pat = re.sub(r'\s+', '\\\\s+', pat)
             pat = re.sub(r'{([^:]+):d}', '(?P<int_\\1>-?[0-9]+)', pat)
             pat = re.sub(r'{([^:]+):f}', '(?P<float_\\1>-?[0-9.]+)', pat)
             pat = re.sub(r'{([^:]+):b}', '(?P<bool_\\1>[01])', pat)
             pat = re.sub(r'{([^:]+):s}', '(?P<str_\\1>[^\\\\s]+)', pat)
-            cls._response_regex = re.compile(pat)
+            cls._response_regex = (re.compile(r'\s+') if is_list else None, re.compile(pat))
 
         return cls._response_regex
 

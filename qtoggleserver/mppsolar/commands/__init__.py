@@ -1,41 +1,97 @@
 
-from typing import Dict, Optional, Type
+from typing import List, Type
 
 from .base import Command
+from .mchgc import MCHGC
+from .mnchgc import MNCHGC_Parallel, MNCHGC_Single
+from .muchgc import MUCHGC_Single, MUCHGC_Parallel
+from .pbatmaxdisc import PBATMAXDISC
+from .pbcv import PBCV
+from .pbdv import PBDV
+from .pbft import PBFT
+from .pbt import PBT
+from .pcp import PCP
+from .pcvv import PCVV
+from .pop import POP
+from .psdv import PSDV
+from .qmchgcr import QMCHGCR
+from .qmuchgcr import QMUCHGCR
 from .qmod import QMOD
 from .qpigs import QPIGS, QPIGS_LV, QPIGS_GKMK
 from .qpigs2 import QPIGS2, QPIGS2_MAX
+from .qpiri import QPIRI, QPIRI_GKMK, QPIRI_MAX
 
-
-DEFAULT_COMMANDS = {
-    'QMOD': QMOD,
-    'QPIGS': QPIGS,
-    'QPIGS2': QPIGS2
-}
 
 COMMANDS_BY_MODEL = {
-    'GK': {
-        'QPIGS': QPIGS_GKMK
-    },
-    'LV': {
-        'QPIGS': QPIGS_LV
-    },
-    'MK': {
-        'QPIGS': QPIGS_GKMK
-    },
-    'MAX': {
-        'QPIGS2': QPIGS2_MAX
-    }
+    'GK': [
+        MNCHGC_Single,
+        MUCHGC_Single,
+        PBCV,
+        PBDV,
+        PBFT,
+        PBT,
+        PCP,
+        PCVV,
+        POP,
+        PSDV,
+        QMCHGCR,
+        QMUCHGCR,
+        QMOD,
+        QPIGS_GKMK,
+        QPIRI_GKMK,
+    ],
+    'LV': [
+        MNCHGC_Single,
+        PBCV,
+        PBDV,
+        PBFT,
+        PBT,
+        PCP,
+        PCVV,
+        POP,
+        PSDV,
+        QMCHGCR,
+        QMOD,
+        QPIGS_LV,
+    ],
+    'MAX': [
+        MCHGC,
+        MNCHGC_Parallel,
+        MUCHGC_Parallel,
+        PBATMAXDISC,
+        PBCV,
+        PBDV,
+        PBFT,
+        PBT,
+        PCP,
+        PCVV,
+        POP,
+        PSDV,
+        QMCHGCR,
+        QMOD,
+        QMUCHGCR,
+        QPIGS,
+        QPIGS2_MAX,
+        QPIRI_MAX,
+    ],
+    'MK': [
+        MNCHGC_Parallel,
+        MUCHGC_Parallel,
+        PBCV,
+        PBDV,
+        PBFT,
+        PBT,
+        PCP,
+        PCVV,
+        POP,
+        PSDV,
+        QMCHGCR,
+        QMOD,
+        QPIGS_GKMK,
+        QPIRI_GKMK,
+    ],
 }
 
 
-def get_command_classes(model: str) -> Dict[str, Type[Command]]:
-    commands = dict(DEFAULT_COMMANDS)
-    commands.update(COMMANDS_BY_MODEL.get(model, {}))
-
-    return commands
-
-
-def make_command(name: str, model: str, **params) -> Optional[Command]:
-    command_class = get_command_classes(model).get(name)
-    return command_class(**params)
+def get_command_classes(model: str) -> List[Type[Command]]:
+    return COMMANDS_BY_MODEL.get(model, [])

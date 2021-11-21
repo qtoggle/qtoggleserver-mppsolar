@@ -1,16 +1,17 @@
 
+import contextlib
 import logging
 import re
 
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Type
 
 from qtoggleserver.utils import json as json_utils
 
 from . import commands
 from .io import BaseIO, HIDRawIO, SerialIO
 from .inverter import MPPSolarInverter
-from .ports import BooleanStatusPort, NumberStatusPort, StringStatusPort
-from .typing import Properties
+from .ports import BooleanPort, NumberPort, StringPort
+from .typing import Properties, Property
 
 
 logger = logging.getLogger(__name__)
@@ -44,25 +45,29 @@ class SerialMPPSolarInverter(MPPSolarInverter):
         self._serial_port: str = serial_port
         self._serial_baud: int = serial_baud
         self._blacklist_properties: Set[str] = set(blacklist_properties or [])
+        self._setter_command_classes_by_property: Dict[str, List[Type[commands.Command]]] = {}
 
         super().__init__(**kwargs)
+
+        for cls in commands.get_command_classes(self._model):
+            for name in cls.get_request_property_definitions():
+                self._setter_command_classes_by_property.setdefault(name, []).append(cls)
 
     def make_io(self) -> BaseIO:
         if re.match(r'.*hidraw\d+', self._serial_port):
             return HIDRawIO(self._serial_port)
-
         else:
             return SerialIO(self._serial_port, self._serial_baud)
 
-    async def run_command(self, io: BaseIO, name: str, **params) -> Properties:
+    async def run_command(self, io: BaseIO, cls: Type[commands.Command], **params) -> Properties:
+        params = dict(params, **self.prepare_command_params(cls))
         if params:
             params_str = ', '.join(f'{k}={json_utils.dumps(v)}' for k, v in params.items())
-            self.debug('running command %s(%s)', name, params_str)
-
+            self.debug('running command %s(%s)', cls.get_name(), params_str)
         else:
-            self.debug('running command %s', name)
+            self.debug('running command %s', cls.get_name())
 
-        cmd = commands.make_command(name, self._model, **params)
+        cmd = cls(**params)
         # Don't run empty commands
         if not cmd.REQUEST_FMT:
             return {}
@@ -72,75 +77,73 @@ class SerialMPPSolarInverter(MPPSolarInverter):
         response = await io.read(self.TIMEOUT)
         parsed_response = cmd.parse_response(response)
 
-        self.debug('got response to command %s', name)
-
         return parsed_response
 
-    async def read_status(self) -> None:
-        io = self.make_io()
+    def prepare_command_params(self, cmd: Type[commands.Command]) -> Properties:
+        return cmd.REQUEST_DEFAULT_VALUES
 
-        # Read status using QPIGS command
-        self._status.update(await self.run_command(io, 'QPIGS'))
+    async def read_properties(self) -> None:
+        with contextlib.closing(self.make_io()) as io:
+            for cls in commands.get_command_classes(self._model):
+                if cls.has_response_properties():
+                    self._properties.update(await self.run_command(io, cls))
 
-        # Read status using QPIGS2 command
-        self._status.update(await self.run_command(io, 'QPIGS2'))
+    async def set_property(self, name: str, value: Property) -> None:
+        cmd_classes = self._setter_command_classes_by_property[name]
+        params = {name: value}
 
-        # Read device mode using QMOD command
-        self._status.update(await self.run_command(io, 'QMOD'))
-
-        io.close()
+        with contextlib.closing(self.make_io()) as io:
+            for cls in cmd_classes:
+                await self.run_command(io, cls, **params)
 
     async def make_port_args(self) -> List[Dict[str, Any]]:
-        port_args = []
+        # All available command classes for this inverter model
+        cmd_classes = commands.get_command_classes(self._model)
 
-        command_classes = commands.get_command_classes(self._model)
-        status_command_classes = []
+        # Fetch property choices
+        choices_by_property = {}
+        with contextlib.closing(self.make_io()) as io:
+            for cls in cmd_classes:
+                response_property_definitions = cls.get_response_property_definitions()
+                for name, details in response_property_definitions.items():
+                    if not details['is_choices']:
+                        continue
 
-        qpigs_command = command_classes.get('QPIGS')
-        if qpigs_command:
-            status_command_classes.append(qpigs_command)
+                    response = await self.run_command(io, cls)
+                    choices_by_property[name] = [
+                        {
+                            'value': c,
+                            'label': str(c)
+                        }
+                        for c in response[name]
+                    ]
 
-        qpigs2_command = command_classes.get('QPIGS2')
-        if qpigs2_command:
-            status_command_classes.append(qpigs2_command)
-
-        qmod_command = command_classes.get('QMOD')
-        if qmod_command:
-            status_command_classes.append(qmod_command)
-
-        for command_class in status_command_classes:
-            for name, details in command_class.get_response_property_definitions().items():
-                if name in self.BLACKLISTED_PROPERTIES:
-                    continue
-
-                if name in self._blacklist_properties:
+        # Create port args
+        blacklisted_properties = self.BLACKLISTED_PROPERTIES | self._blacklist_properties
+        port_args_list = []
+        for cls in cmd_classes:
+            response_property_definitions = cls.get_response_property_definitions()
+            for name, details in response_property_definitions.items():
+                if (name in blacklisted_properties) or details['is_choices']:
                     continue
 
                 type_ = details['type']
-
+                port_args = {
+                    'property_name': name,
+                    'display_name': details['display_name'],
+                    'unit': details['unit'],
+                    'choices': details['choices'] or choices_by_property.get(name),
+                    'writable': name in self._setter_command_classes_by_property
+                }
                 if type_ == 'bool':
-                    port_args.append({
-                        'driver': BooleanStatusPort,
-                        'property_name': name,
-                        'display_name': details['display_name']
-                    })
-
+                    port_args['driver'] = BooleanPort
                 elif type_ in ('int', 'float'):
-                    port_args.append({
-                        'driver': NumberStatusPort,
-                        'property_name': name,
-                        'display_name': details['display_name'],
-                        'unit': details['unit'],
-                        'choices': details['choices']
-                    })
-
+                    port_args['driver'] = NumberPort
                 elif type_ == 'str':
-                    port_args.append({
-                        'driver': StringStatusPort,
-                        'property_name': name,
-                        'display_name': details['display_name'],
-                        'unit': details['unit'],
-                        'choices': details['choices']
-                    })
+                    port_args['driver'] = StringPort
+                else:
+                    continue
 
-        return port_args
+                port_args_list.append(port_args)
+
+        return port_args_list

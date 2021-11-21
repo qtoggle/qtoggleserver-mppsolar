@@ -14,6 +14,16 @@ Install using pip:
     pip install qtoggleserver-mppsolar
 
 
+## Supported Models
+
+Currently supported models include:
+
+ * GK
+ * MK
+ * LV
+ * MAX
+
+
 ## Usage
 
 ### Serial Connection
