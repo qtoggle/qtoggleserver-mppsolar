@@ -30,7 +30,7 @@ class MPPSolarInverter(PolledPeripheral, metaclass=abc.ABCMeta):
     ) -> None:
 
         self._model: str = model
-        self._status: Dict[str, Property] = {}
+        self._properties: Dict[str, Property] = {}
 
         super().__init__(**kwargs)
 
