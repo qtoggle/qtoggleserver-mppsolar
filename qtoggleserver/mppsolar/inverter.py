@@ -34,15 +34,18 @@ class MPPSolarInverter(PolledPeripheral, metaclass=abc.ABCMeta):
 
         super().__init__(**kwargs)
 
-    async def read_status(self) -> None:
+    async def read_properties(self) -> None:
         raise NotImplementedError
 
     async def poll(self) -> None:
         try:
-            await self.read_status()
+            await self.read_properties()
 
         except asyncio.TimeoutError as e:
             raise MPPSolarTimeout('Timeout reading inverter status') from e
 
-    def get_status_property(self, name: str) -> Optional[Property]:
-        return self._status.get(name)
+    def get_property(self, name: str) -> Optional[Property]:
+        return self._properties.get(name)
+
+    async def set_property(self, name: str, value: Property) -> None:
+        raise NotImplementedError

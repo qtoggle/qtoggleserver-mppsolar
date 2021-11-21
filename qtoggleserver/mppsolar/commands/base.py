@@ -23,6 +23,7 @@ class Command:
     UNITS = {}
     DISPLAY_NAMES = {}
     CHOICES = {}
+    REQUEST_DEFAULT_VALUES = {}
 
     _TYPE_MAP = {
         'int': int,
@@ -32,13 +33,14 @@ class Command:
     }
 
     _response_regex: Optional[re.Pattern] = None
+    _request_property_definitions: Optional[PropertyDefinitions] = None
     _response_property_definitions: Optional[PropertyDefinitions] = None
 
     def __init__(self, **params) -> None:
         self._params = params
 
     def prepare_request(self) -> bytes:
-        message = self.REQUEST_FMT.format(self._params)
+        message = self.REQUEST_FMT.format(self._params, **self.REQUEST_DEFAULT_VALUES)
         return message.encode() + self.compute_crc(message) + b'\r'
 
     def parse_response(self, response: bytes) -> Properties:
@@ -77,9 +79,27 @@ class Command:
         return parsed_dict
 
     @classmethod
+    def get_request_property_definitions(cls) -> PropertyDefinitions:
+        if cls._request_property_definitions is None:
+            matches = re.findall(r'{([^:]+):([.0-9dfbs])}', cls.REQUEST_FMT)
+            cls._request_property_definitions = {
+                name: {
+                    'format': format_
+                } for name, format_ in matches if not name.startswith('_')
+            }
+
+        return cls._request_property_definitions
+
+    @classmethod
     def get_response_property_definitions(cls) -> PropertyDefinitions:
         if cls._response_property_definitions is None:
-            matches = re.findall(r'{([^:]+):([dfbs])}', cls.RESPONSE_FMT)
+            is_list = False
+            response_fmt = cls.RESPONSE_FMT
+            if response_fmt.endswith('+'):
+                is_list = True
+                response_fmt = response_fmt[:-1]
+
+            matches = re.findall(r'{([^:]+):([dfbs])}', response_fmt)
             matches += [(name, details['type']) for name, details in cls.VIRTUAL_PROPERTIES.items()]
             type_mapping = {
                 'd': 'int',
@@ -90,6 +110,7 @@ class Command:
             cls._response_property_definitions = {
                 name: {
                     'type': type_mapping.get(type_, type_),
+                    'list': is_list,
                     'unit': cls.UNITS.get(name),
                     'display_name': cls.DISPLAY_NAMES.get(name),
                     'choices': [
@@ -105,11 +126,17 @@ class Command:
     def get_response_regex(cls) -> re.Pattern:
         if cls._response_regex is None:
             pat = cls.RESPONSE_FMT
+            is_list = False
+            if pat.endswith('...'):
+                pat = pat[:-1]
+                is_list = True
             pat = re.sub(r'\s+', '\\\\s+', pat)
             pat = re.sub(r'{([^:]+):d}', '(?P<int_\\1>-?[0-9]+)', pat)
             pat = re.sub(r'{([^:]+):f}', '(?P<float_\\1>-?[0-9.]+)', pat)
             pat = re.sub(r'{([^:]+):b}', '(?P<bool_\\1>[01])', pat)
             pat = re.sub(r'{([^:]+):s}', '(?P<str_\\1>[^\\\\s]+)', pat)
+            if is_list:
+                pat = rf'({pat}\s+)+'
             cls._response_regex = re.compile(pat)
 
         return cls._response_regex
