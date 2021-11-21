@@ -18,7 +18,6 @@ class MPPSolarInverter(PolledPeripheral, metaclass=abc.ABCMeta):
     DEFAULT_POLL_INTERVAL = 5
     RETRY_POLL_INTERVAL = 5
 
-    DEFAULT_MODEL = 'default'
     TIMEOUT = 10
 
     logger = logger
@@ -26,7 +25,7 @@ class MPPSolarInverter(PolledPeripheral, metaclass=abc.ABCMeta):
     def __init__(
         self,
         *,
-        model: str = DEFAULT_MODEL,
+        model: str,
         **kwargs
     ) -> None:
 
