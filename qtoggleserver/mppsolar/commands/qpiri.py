@@ -24,7 +24,7 @@ class QPIRI(Command):
         'battery_bulk_charging_voltage': 'Battery Bulk Charging Voltage',
         'battery_float_charging_voltage': 'Battery Float Charging Voltage',
         'battery_type': 'Battery Type',
-        'battery_max_grid_charging_current': 'Battery Max AC Charging Current',
+        'battery_max_grid_charging_current': 'Battery Max Grid Charging Current',
         'battery_max_charging_current': 'Battery Max Charging Current',
         'output_source_priority': 'Output Source Priority',
         'charging_source_priority': 'Charging Source Priority',
