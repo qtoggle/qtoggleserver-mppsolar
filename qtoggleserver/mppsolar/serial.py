@@ -1,4 +1,5 @@
 
+import asyncio
 import contextlib
 import logging
 import re
@@ -46,6 +47,7 @@ class SerialMPPSolarInverter(MPPSolarInverter):
         self._serial_baud: int = serial_baud
         self._blacklist_properties: Set[str] = set(blacklist_properties or [])
         self._setter_command_classes_by_property: Dict[str, List[Type[commands.Command]]] = {}
+        self._command_lock: asyncio.Lock = asyncio.Lock()
 
         super().__init__(**kwargs)
 
@@ -73,8 +75,9 @@ class SerialMPPSolarInverter(MPPSolarInverter):
             return {}
 
         request = cmd.prepare_request()
-        io.write(request)
-        response = await io.read(self.TIMEOUT)
+        async with self._command_lock:
+            io.write(request)
+            response = await io.read(self.TIMEOUT)
         parsed_response = cmd.parse_response(response)
 
         return parsed_response
