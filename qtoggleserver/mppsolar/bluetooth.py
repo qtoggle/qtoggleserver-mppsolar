@@ -56,13 +56,13 @@ class BluetoothMPPSolarInverter(MPPSolarInverter, ble.BLEPeripheral):
 
     def parse_status1_data(self, data: bytes) -> None:
         (
-            ac_input_voltage, ac_input_frequency, ac_output_voltage, ac_output_frequency,
+            grid_voltage, grid_frequency, ac_output_voltage, ac_output_frequency,
             ac_output_apparent_power, ac_output_active_power, ac_output_load,
             bus_voltage, battery_voltage, battery_charging_current
         ) = struct.unpack('<HHHHHHHHHH', data)
 
-        self._properties['ac_input_voltage'] = ac_input_voltage / 10
-        self._properties['ac_input_frequency'] = ac_input_frequency / 10
+        self._properties['grid_voltage'] = grid_voltage / 10
+        self._properties['grid_frequency'] = grid_frequency / 10
         self._properties['ac_output_voltage'] = ac_output_voltage / 10
         self._properties['ac_output_frequency'] = ac_output_frequency / 10
         self._properties['ac_output_apparent_power'] = ac_output_apparent_power
@@ -90,14 +90,14 @@ class BluetoothMPPSolarInverter(MPPSolarInverter, ble.BLEPeripheral):
         return [
             {
                 'driver': NumberPort,
-                'property_name': 'ac_input_voltage',
-                'display_name': 'AC Input Voltage',
+                'property_name': 'grid_voltage',
+                'display_name': 'Grid Voltage',
                 'unit': 'V'
             },
             {
                 'driver': NumberPort,
-                'property_name': 'ac_input_frequency',
-                'display_name': 'AC Input Frequency',
+                'property_name': 'grid_frequency',
+                'display_name': 'Grid Frequency',
                 'unit': 'Hz'
             },
             {

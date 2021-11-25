@@ -1,7 +1,7 @@
 
 MODE_POWER_ON = 'P'
 MODE_STANDBY = 'S'
-MODE_AC_INPUT = 'L'
+MODE_GRID = 'L'
 MODE_BATTERY = 'B'
 MODE_FAULT = 'F'
 MODE_POWER_SAVING = 'H'
@@ -13,7 +13,7 @@ MODE_ECO = 'E'
 MODE_CHOICES = [
     (MODE_POWER_ON, 'Power On'),
     (MODE_STANDBY, 'Standby'),
-    (MODE_AC_INPUT, 'AC Input'),
+    (MODE_GRID, 'Grid'),
     (MODE_BATTERY, 'Battery'),
     (MODE_FAULT, 'Fault'),
     (MODE_POWER_SAVING, 'Power Saving'),
@@ -71,7 +71,6 @@ BATTERY_BACK_TO_GRID_VOLTAGE_CHOICES_48V = [
 ]
 
 BATTERY_BACK_TO_DISCHARGING_VOLTAGE_CHOICES_48V = [
-    (0, 'Full'),
     (48, '48'),
     (49, '49'),
     (50, '50'),
@@ -83,4 +82,5 @@ BATTERY_BACK_TO_DISCHARGING_VOLTAGE_CHOICES_48V = [
     (56, '56'),
     (57, '57'),
     (58, '58'),
+    (0, 'Full'),
 ]

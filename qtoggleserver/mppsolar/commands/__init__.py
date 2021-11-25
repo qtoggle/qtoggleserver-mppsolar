@@ -17,7 +17,7 @@ from .psdv import PSDV
 from .qmchgcr import QMCHGCR
 from .qmuchgcr import QMUCHGCR
 from .qmod import QMOD
-from .qpigs import QPIGS, QPIGS_LV, QPIGS_GKMK
+from .qpigs import QPIGS, QPIGS_LV, QPIGS_GKMK, QPIGS_MAX
 from .qpigs2 import QPIGS2, QPIGS2_MAX
 from .qpiri import QPIRI, QPIRI_GKMK, QPIRI_MAX
 
@@ -70,7 +70,7 @@ COMMANDS_BY_MODEL = {
         QMCHGCR,
         QMOD,
         QMUCHGCR,
-        QPIGS,
+        QPIGS_MAX,
         QPIGS2_MAX,
         QPIRI_MAX,
     ],
