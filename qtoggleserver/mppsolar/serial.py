@@ -2,13 +2,14 @@
 import asyncio
 import contextlib
 import logging
+import math
 import re
 
 from typing import Any, Dict, List, Optional, Set, Type
 
 from qtoggleserver.utils import json as json_utils
 
-from . import commands
+from . import commands, constants
 from .io import BaseIO, HIDRawIO, SerialIO
 from .inverter import MPPSolarInverter
 from .ports import BooleanPort, NumberPort, StringPort
@@ -20,6 +21,7 @@ logger = logging.getLogger(__name__)
 
 class SerialMPPSolarInverter(MPPSolarInverter):
     DEFAULT_BAUD = 2400
+    BATTERY_FORCE_WAIT = 2
 
     # Filter out properties that we don't really want exposed
     BLACKLISTED_PROPERTIES = {
@@ -40,13 +42,18 @@ class SerialMPPSolarInverter(MPPSolarInverter):
         serial_port: str,
         serial_baud: int = DEFAULT_BAUD,
         blacklist_properties: Optional[List[str]] = None,
+        force_battery_discharge_min_soc: Optional[int] = None,
+        force_battery_charge_grid_min_voltage: Optional[int] = None,
         **kwargs
     ) -> None:
 
         self._serial_port: str = serial_port
         self._serial_baud: int = serial_baud
         self._blacklist_properties: Set[str] = set(blacklist_properties or [])
+        self._force_battery_discharge_min_soc: Optional[int] = force_battery_discharge_min_soc
+        self._force_battery_charge_min_grid_voltage: Optional[int] = force_battery_charge_grid_min_voltage
         self._setter_command_classes_by_property: Dict[str, List[Type[commands.Command]]] = {}
+        self._choices_by_property: Dict[str, List[Dict[str, Any]]] = {}
         self._command_lock: asyncio.Lock = asyncio.Lock()
 
         super().__init__(**kwargs)
@@ -94,17 +101,112 @@ class SerialMPPSolarInverter(MPPSolarInverter):
     async def set_property(self, name: str, value: Property) -> None:
         cmd_classes = self._setter_command_classes_by_property[name]
         params = {name: value}
+        old_value = self._properties.get(name)
 
         with contextlib.closing(self.make_io()) as io:
             for cls in cmd_classes:
                 await self.run_command(io, cls, **params)
+
+            await self._handle_post_set_property(io, name, old_value, value)
+
+    async def _handle_post_set_property(
+        self,
+        io: BaseIO, name: str,
+        old_value: Optional[Property],
+        new_value: Property
+    ) -> None:
+        # When changing output source priority, the user normally expects the inverter to switch to battery
+        # charging/discharging mode right away, depending on the new setting. The inverter doesn't do this automatically
+        # as it attempts to preserve the current charging/discharging battery phase, so we need to force it by
+        # temporarily adjusting back-to-(dis)charging battery parameters.
+        if name == 'output_source_priority':
+            mode = self._properties.get('mode')
+            soc = self._properties.get('battery_state_of_charge', 0)
+            grid_voltage = self._properties.get('grid_voltage', 0)
+            if (
+                new_value == constants.OUTPUT_SOURCE_PRIORITY_SBG and
+                mode == constants.MODE_GRID and
+                self._force_battery_discharge_min_soc is not None and
+                soc >= self._force_battery_discharge_min_soc
+            ):
+                self.info('forcing battery discharge')
+                await self._force_battery_discharge(io)
+            elif (
+                old_value == constants.OUTPUT_SOURCE_PRIORITY_SBG and
+                mode == constants.MODE_BATTERY and
+                self._force_battery_charge_min_grid_voltage is not None and
+                grid_voltage > self._force_battery_charge_min_grid_voltage
+            ):
+                self.info('forcing battery charge')
+                await self._force_battery_charge(io)
+
+    async def _force_battery_discharge(self, io: BaseIO) -> None:
+        cmd_classes = self._setter_command_classes_by_property.get('battery_back_to_discharging_voltage', [])
+        if not cmd_classes:
+            self.warning('cannot force battery mode: command not available')
+            return
+        cls = cmd_classes[0]
+
+        battery_voltage = self._properties.get('battery_voltage')
+        if battery_voltage is None:
+            self.warning('cannot force battery mode: battery voltage not available')
+            return
+
+        battery_back_to_discharging_voltage = self._properties.get('battery_back_to_discharging_voltage')
+        if battery_back_to_discharging_voltage is None:
+            self.warning('cannot force battery mode: battery back-to-discharging voltage not available')
+            return
+
+        temp_value = int(battery_voltage)
+        if temp_value == battery_voltage:
+            temp_value -= 1
+
+        if temp_value <= battery_back_to_discharging_voltage:
+            self.debug('adjusting battery back-to-discharging voltage not needed')
+            return
+
+        try:
+            await self.run_command(io, cls, battery_back_to_discharging_voltage=temp_value)
+            await asyncio.sleep(self.BATTERY_FORCE_WAIT)
+        finally:
+            await self.run_command(io, cls, battery_back_to_discharging_voltage=battery_back_to_discharging_voltage)
+
+    async def _force_battery_charge(self, io: BaseIO) -> None:
+        cmd_classes = self._setter_command_classes_by_property.get('battery_back_to_charging_voltage', [])
+        if not cmd_classes:
+            self.warning('cannot force battery mode: command not available')
+            return
+        cls = cmd_classes[0]
+
+        battery_voltage = self._properties.get('battery_voltage')
+        if battery_voltage is None:
+            self.warning('cannot force battery mode: battery voltage not available')
+            return
+
+        battery_back_to_charging_voltage = self._properties.get('battery_back_to_charging_voltage')
+        if battery_back_to_charging_voltage is None:
+            self.warning('cannot force battery mode: battery back-to-charging voltage not available')
+            return
+
+        temp_value = int(math.ceil(battery_voltage))
+        if temp_value == battery_voltage:
+            temp_value += 1
+
+        if temp_value >= battery_back_to_charging_voltage:
+            self.debug('adjusting battery back-to-charging voltage not needed')
+            return
+
+        try:
+            await self.run_command(io, cls, battery_back_to_charging_voltage=temp_value)
+            await asyncio.sleep(self.BATTERY_FORCE_WAIT)
+        finally:
+            await self.run_command(io, cls, battery_back_to_charging_voltage=battery_back_to_charging_voltage)
 
     async def make_port_args(self) -> List[Dict[str, Any]]:
         # All available command classes for this inverter model
         cmd_classes = commands.get_command_classes(self._model)
 
         # Fetch property choices
-        choices_by_property = {}
         with contextlib.closing(self.make_io()) as io:
             for cls in cmd_classes:
                 response_property_definitions = cls.get_response_property_definitions()
@@ -113,7 +215,7 @@ class SerialMPPSolarInverter(MPPSolarInverter):
                         continue
 
                     response = await self.run_command(io, cls)
-                    choices_by_property[name] = [
+                    self._choices_by_property[name] = [
                         {
                             'value': c,
                             'label': str(c)
@@ -135,7 +237,7 @@ class SerialMPPSolarInverter(MPPSolarInverter):
                     'property_name': name,
                     'display_name': details['display_name'],
                     'unit': details['unit'],
-                    'choices': details['choices'] or choices_by_property.get(name),
+                    'choices': details['choices'] or self._choices_by_property.get(name),
                     'writable': name in self._setter_command_classes_by_property
                 }
                 if type_ == 'bool':

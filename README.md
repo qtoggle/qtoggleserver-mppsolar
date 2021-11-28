@@ -40,6 +40,10 @@ peripherals = [
         serial_baud = 2400              # this is the default
         model = "GK"                    # model letters found in inverter model (e.g. "GK" for "PIP 5048GK")
         blacklist_properties = [...]    # optional list of property names to be excluded
+        # optional min SoC required to force battery into discharge mode (defaults to null, i.e. disabled)
+        force_battery_discharge_min_soc = 10
+        # optional min grid voltage required to force battery into charge mode (defaults to null, i.e. disabled)
+        force_battery_charge_grid_min_voltage = 200 
     }
     ...
 ]
@@ -47,6 +51,8 @@ peripherals = [
 ```
 
 ### Bluetooth Connection
+
+*note*: The bluetooth connection variant is limited to just a few read-only inverter properties.
 
 ##### `qtoggleserver.conf:`
 ``` ini
