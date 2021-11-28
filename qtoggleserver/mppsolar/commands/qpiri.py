@@ -8,7 +8,7 @@ class QPIRI(Command):
     REQUEST_FMT = 'QPIRI'
 
     UNITS = {
-        'battery_back_to_grid_voltage': 'V',
+        'battery_back_to_charging_voltage': 'V',
         'battery_cut_off_voltage': 'V',
         'battery_bulk_charging_voltage': 'V',
         'battery_float_charging_voltage': 'V',
@@ -19,7 +19,7 @@ class QPIRI(Command):
     }
 
     DISPLAY_NAMES = {
-        'battery_back_to_grid_voltage': 'Battery Back-to-grid Voltage',
+        'battery_back_to_charging_voltage': 'Battery Back-to-charging Voltage',
         'battery_cut_off_voltage': 'Battery Cut-off Voltage',
         'battery_bulk_charging_voltage': 'Battery Bulk Charging Voltage',
         'battery_float_charging_voltage': 'Battery Float Charging Voltage',
@@ -37,7 +37,7 @@ class QPIRI(Command):
         'output_source_priority': constants.OUTPUT_SOURCE_PRIORITY_CHOICES,
         'charging_source_priority': constants.CHARGING_SOURCE_PRIORITY_CHOICES,
         'battery_max_discharging_current': constants.BATTERY_MAX_DISCHARGING_CURRENT_CHOICES,
-        'battery_back_to_grid_voltage': constants.BATTERY_BACK_TO_GRID_VOLTAGE_CHOICES_48V,
+        'battery_back_to_charging_voltage': constants.BATTERY_BACK_TO_GRID_VOLTAGE_CHOICES_48V,
         'battery_back_to_discharging_voltage': constants.BATTERY_BACK_TO_DISCHARGING_VOLTAGE_CHOICES_48V,
     }
 
@@ -52,7 +52,7 @@ class QPIRI_GKMK(QPIRI):
         '{_ac_output_rating_apparent_power:f} '
         '{_ac_output_rating_active_power:f} '
         '{_battery_rating_voltage:f} '
-        '{battery_back_to_grid_voltage:f} '
+        '{battery_back_to_charging_voltage:f} '
         '{battery_cut_off_voltage:f} '
         '{battery_bulk_charging_voltage:f} '
         '{battery_float_charging_voltage:f} '
@@ -84,7 +84,7 @@ class QPIRI_MAX(QPIRI):
         '{_ac_output_rating_apparent_power:f} '
         '{_ac_output_rating_active_power:f} '
         '{_battery_rating_voltage:f} '
-        '{battery_back_to_grid_voltage:f} '
+        '{battery_back_to_charging_voltage:f} '
         '{battery_cut_off_voltage:f} '
         '{battery_bulk_charging_voltage:f} '
         '{battery_float_charging_voltage:f} '
