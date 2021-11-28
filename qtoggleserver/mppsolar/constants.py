@@ -23,23 +23,37 @@ MODE_CHOICES = [
     (MODE_ECO, 'Eco')
 ]
 
+BATTERY_TYPE_AGM = 0
+BATTERY_TYPE_FLOODED = 1
+BATTERY_TYPE_USER = 2
+BATTERY_TYPE_PYLONTECH = 3
+
 BATTERY_TYPE_CHOICES = [
-    (0, 'AGM'),
-    (1, 'Flooded'),
-    (2, 'User'),
-    (3, 'Pylontech'),
+    (BATTERY_TYPE_AGM, 'AGM'),
+    (BATTERY_TYPE_FLOODED, 'Flooded'),
+    (BATTERY_TYPE_USER, 'User'),
+    (BATTERY_TYPE_PYLONTECH, 'Pylontech'),
 ]
+
+OUTPUT_SOURCE_PRIORITY_GSB = 0
+OUTPUT_SOURCE_PRIORITY_SGB = 1
+OUTPUT_SOURCE_PRIORITY_SBG = 2
 
 OUTPUT_SOURCE_PRIORITY_CHOICES = [
-    (0, 'Grid/Solar/Battery'),
-    (1, 'Solar/Grid/Battery'),
-    (2, 'Solar/Battery/Grid'),
+    (OUTPUT_SOURCE_PRIORITY_GSB, 'Grid/Solar/Battery'),
+    (OUTPUT_SOURCE_PRIORITY_SGB, 'Solar/Grid/Battery'),
+    (OUTPUT_SOURCE_PRIORITY_SBG, 'Solar/Battery/Grid'),
 ]
 
+CHARGING_SOURCE_PRIORITY_STG = 1
+CHARGING_SOURCE_PRIORITY_SAG = 2
+CHARGING_SOURCE_PRIORITY_OS = 3
+
 CHARGING_SOURCE_PRIORITY_CHOICES = [
-    (1, 'Solar Then Grid'),
-    (2, 'Solar And Grid'),
-    (3, 'Only Solar'),
+    (0, 'Only Grid'),
+    (CHARGING_SOURCE_PRIORITY_STG, 'Solar Then Grid'),
+    (CHARGING_SOURCE_PRIORITY_SAG, 'Solar And Grid'),
+    (CHARGING_SOURCE_PRIORITY_OS, 'Only Solar'),
 ]
 
 BATTERY_MAX_DISCHARGING_CURRENT_CHOICES = [
