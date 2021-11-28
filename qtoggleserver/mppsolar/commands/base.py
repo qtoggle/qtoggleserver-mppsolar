@@ -52,17 +52,17 @@ class Command:
 
     def parse_response(self, response: bytes) -> Properties:
         if not response.startswith(b'('):
-            raise ResponseError('Unexpected response start')
+            raise ResponseError(f'Unexpected response start: {response}')
 
         if not response.endswith(b'\r'):
-            raise ResponseError('Unexpected response end')
+            raise ResponseError(f'Unexpected response end: {response}')
 
         response = response[:-1]  # Get rid of terminal '\r'
 
         crc = response[-2:]
         response = response[:-2].decode()
         if self.compute_crc(response) != crc:
-            raise ResponseError('Wrong CRC')
+            raise ResponseError(f'Wrong CRC: {response}')
 
         response = response[1:]  # Get rid of start byte '('
 
@@ -76,7 +76,7 @@ class Command:
         for part in parts:
             match = values_pat.match(part)
             if not match:
-                raise ResponseError('Unexpected response format')
+                raise ResponseError(f'Unexpected response format: {response}')
 
             for name, value in match.groupdict().items():
                 type_, name = name.split('_', 1)
