@@ -98,10 +98,6 @@ class QPIGS(Command):
             'value': lambda properties: properties.get('pv_current', 0) * properties.get('pv_voltage', 0),
             'type': 'float'
         },
-        'pv2_power': {
-            'value': lambda properties: properties.get('pv2_current', 0) * properties.get('pv2_voltage', 0),
-            'type': 'float'
-        },
         'is_battery_charging': {
             'value': lambda properties: (
                 properties.get('is_battery_charging_from_grid', False) or
@@ -207,7 +203,7 @@ class QPIGS_MAX(QPIGS):
         '{is_battery_charging:b}'
         '{is_battery_charging_from_scc:b}'
         '{is_battery_charging_from_grid:b} '
-        '{battery_voltage_offset_fans:d}'
+        '{battery_voltage_offset_fans:d} '
         '{eeprom_version:d} '
         '{pv_charging_power:d} '
         '{is_battery_float_charging:b}'
