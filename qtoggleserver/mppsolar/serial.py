@@ -21,7 +21,8 @@ logger = logging.getLogger(__name__)
 
 class SerialMPPSolarInverter(MPPSolarInverter):
     DEFAULT_BAUD = 2400
-    BATTERY_FORCE_WAIT = 2
+    CMD_WAIT = 0.5  # seconds
+    BATTERY_FORCE_WAIT = 2  # seconds
 
     # Filter out properties that we don't really want exposed
     BLACKLISTED_PROPERTIES = {
@@ -102,6 +103,11 @@ class SerialMPPSolarInverter(MPPSolarInverter):
         cmd_classes = self._setter_command_classes_by_property[name]
         params = {name: value}
         old_value = self._properties.get(name)
+
+        if old_value == value:
+            return
+
+        self.debug('setting property "%s" from %s to %s', name, json_utils.dumps(old_value), json_utils.dumps(value))
 
         with contextlib.closing(self.make_io()) as io:
             for cls in cmd_classes:
