@@ -88,6 +88,8 @@ class SerialMPPSolarInverter(MPPSolarInverter):
             response = await io.read(self.TIMEOUT)
         parsed_response = cmd.parse_response(response)
 
+        await asyncio.sleep(self.CMD_WAIT)
+
         return parsed_response
 
     def prepare_command_params(self, cmd: Type[commands.Command]) -> Properties:
