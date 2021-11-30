@@ -101,7 +101,11 @@ class SerialMPPSolarInverter(MPPSolarInverter):
         with contextlib.closing(self.make_io()) as io:
             for cls in commands.get_command_classes(self._model):
                 if cls.has_response_properties():
-                    self._properties.update(await self.run_command(io, cls))
+                    try:
+                        self._properties.update(await self.run_command(io, cls))
+                    except Exception as e:
+                        self.error('command %s failed: %s', cls.get_name(), e)
+                        continue
 
     async def set_property(self, name: str, value: Property) -> None:
         cmd_classes = self._setter_command_classes_by_property[name]

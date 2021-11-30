@@ -62,7 +62,7 @@ class Command:
         crc = response[-2:]
         response = response[:-2].decode()
         if self.compute_crc(response) != crc:
-            raise ResponseError(f'Wrong CRC: {response}')
+            raise ResponseError(f'Wrong CRC: {response} {repr(crc)[2:-1]}')
 
         response = response[1:]  # Get rid of start byte '('
 
