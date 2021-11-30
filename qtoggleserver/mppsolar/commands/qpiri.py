@@ -37,8 +37,6 @@ class QPIRI(Command):
         'output_source_priority': constants.OUTPUT_SOURCE_PRIORITY_CHOICES,
         'charging_source_priority': constants.CHARGING_SOURCE_PRIORITY_CHOICES,
         'battery_max_discharging_current': constants.BATTERY_MAX_DISCHARGING_CURRENT_CHOICES,
-        'battery_back_to_charging_voltage': constants.BATTERY_BACK_TO_GRID_VOLTAGE_CHOICES_48V,
-        'battery_back_to_discharging_voltage': constants.BATTERY_BACK_TO_DISCHARGING_VOLTAGE_CHOICES_48V,
     }
 
 
