@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class SerialMPPSolarInverter(MPPSolarInverter):
     DEFAULT_BAUD = 2400
     CMD_WAIT = 0.5  # seconds
-    BATTERY_FORCE_WAIT = 2  # seconds
+    BATTERY_FORCE_WAIT = 5  # seconds
 
     # Filter out properties that we don't really want exposed
     BLACKLISTED_PROPERTIES = {
@@ -87,10 +87,10 @@ class SerialMPPSolarInverter(MPPSolarInverter):
             self.debug('sending "%s"', repr(request)[2:-1])
             io.write(request)
             response = await io.read(self.TIMEOUT)
+            await asyncio.sleep(self.CMD_WAIT)
             self.debug('received "%s"', repr(response)[2:-1])
-        parsed_response = cmd.parse_response(response)
 
-        await asyncio.sleep(self.CMD_WAIT)
+        parsed_response = cmd.parse_response(response)
 
         return parsed_response
 
@@ -171,7 +171,7 @@ class SerialMPPSolarInverter(MPPSolarInverter):
         if temp_value == battery_voltage:
             temp_value -= 1
 
-        if temp_value <= battery_back_to_discharging_voltage:
+        if temp_value >= battery_back_to_discharging_voltage:
             self.debug('adjusting battery back-to-discharging voltage not needed')
             return
 
@@ -202,7 +202,7 @@ class SerialMPPSolarInverter(MPPSolarInverter):
         if temp_value == battery_voltage:
             temp_value += 1
 
-        if temp_value >= battery_back_to_charging_voltage:
+        if temp_value <= battery_back_to_charging_voltage:
             self.debug('adjusting battery back-to-charging voltage not needed')
             return
 
