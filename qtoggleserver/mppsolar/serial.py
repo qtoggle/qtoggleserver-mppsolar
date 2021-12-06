@@ -250,8 +250,6 @@ class SerialMPPSolarInverter(MPPSolarInverter):
                 port_args = {
                     'property_name': name,
                     'display_name': details['display_name'],
-                    'unit': details['unit'],
-                    'choices': details['choices'] or self._choices_by_property.get(name),
                     'writable': name in self._setter_command_classes_by_property
                 }
                 if type_ == 'bool':
@@ -262,6 +260,12 @@ class SerialMPPSolarInverter(MPPSolarInverter):
                     port_args['driver'] = StringPort
                 else:
                     continue
+
+                if type_ in ('int', 'str'):
+                    port_args.update({
+                        'unit': details['unit'],
+                        'choices': details['choices'] or self._choices_by_property.get(name),
+                    })
 
                 port_args_list.append(port_args)
 
