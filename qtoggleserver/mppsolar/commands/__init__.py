@@ -19,7 +19,7 @@ from .qmuchgcr import QMUCHGCR
 from .qmod import QMOD
 from .qpigs import QPIGS, QPIGS_LV, QPIGS_GKMK, QPIGS_MAX
 from .qpigs2 import QPIGS2, QPIGS2_MAX
-from .qpiri import QPIRI, QPIRI_GKMK, QPIRI_MAX
+from .qpiri import QPIRI, QPIRI_GK, QPIRI_MAX, QPIRI_MK
 
 
 COMMANDS_BY_MODEL = {
@@ -38,7 +38,7 @@ COMMANDS_BY_MODEL = {
         QMUCHGCR,
         QMOD,
         QPIGS_GKMK,
-        QPIRI_GKMK,
+        QPIRI_GK,
     ],
     'LV': [
         MNCHGC_Single,
@@ -88,7 +88,7 @@ COMMANDS_BY_MODEL = {
         QMCHGCR,
         QMOD,
         QPIGS_GKMK,
-        QPIRI_GKMK,
+        QPIRI_MK,
     ],
 }
 
