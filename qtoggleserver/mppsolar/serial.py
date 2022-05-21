@@ -30,9 +30,19 @@ class SerialMPPSolarInverter(MPPSolarInverter):
         'is_configuration_status_changed',
         'is_scc_firmware_updated',
         'is_battery_voltage_too_steady_while_charging',
+        'is_battery_charging',  # is_battery_charging* properties appear to be broken
+        'is_battery_charging_from_scc',
+        'is_battery_charging_from_grid',
+        'is_battery_float_charging',
+        'is_battery_low',
+        'is_battery_present',
+        'is_grid_present',
+        'is_scc_active',
         'battery_voltage_offset_fans',
         'eeprom_version',
-        'is_dustproof_installed'
+        'is_dustproof_installed',
+        'is_turned_on',
+        'is_scc_firmware_updated',
     }
 
     logger = logger

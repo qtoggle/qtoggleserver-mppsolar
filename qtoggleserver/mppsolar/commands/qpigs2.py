@@ -24,10 +24,3 @@ class QPIGS2_MAX(QPIGS2):
         'pv2_voltage': 'PV2 Voltage',
         'pv2_power': 'PV2 Power'
     }
-
-    VIRTUAL_PROPERTIES = {
-        'pv2_power': {
-            'value': lambda properties: properties.get('pv2_current', 0) * properties.get('pv2_voltage', 0),
-            'type': 'float'
-        }
-    }

@@ -88,8 +88,10 @@ class Command:
 
         # Add virtual properties
         for name, details in self.VIRTUAL_PROPERTIES.items():
+            if not details:
+                continue  # property disabled in command subclass
             if name in parsed_dict:
-                continue  # Property already present
+                continue  # property already present
 
             parsed_dict[name] = details['value'](parsed_dict)
 
@@ -117,7 +119,7 @@ class Command:
                 response_fmt = response_fmt[:-3]
 
             matches = re.findall(r'{([^:]+):([dfbs])}', response_fmt)
-            matches += [(name, details['type']) for name, details in cls.VIRTUAL_PROPERTIES.items()]
+            matches += [(name, details['type']) for name, details in cls.VIRTUAL_PROPERTIES.items() if details]
             type_mapping = {
                 'd': 'int',
                 'f': 'float',
