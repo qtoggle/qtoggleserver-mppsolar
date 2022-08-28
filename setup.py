@@ -10,5 +10,11 @@ setup(
     author_email='ccrisan@gmail.com',
     license='Apache 2.0',
 
-    packages=find_namespace_packages()
+    packages=find_namespace_packages(),
+
+    install_requires=[
+        'pyserial>=3.4',
+        'pyserial-asyncio>=0.4',
+        'bleak',
+    ]
 )
