@@ -1,5 +1,5 @@
 
-from typing import List, Type
+from typing import Type
 
 from .base import Command
 from .mchgc import MCHGC
@@ -93,5 +93,5 @@ COMMANDS_BY_MODEL = {
 }
 
 
-def get_command_classes(model: str) -> List[Type[Command]]:
+def get_command_classes(model: str) -> list[type[Command]]:
     return COMMANDS_BY_MODEL.get(model, [])

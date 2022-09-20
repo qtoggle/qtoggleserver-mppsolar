@@ -3,7 +3,7 @@ import abc
 import logging
 import struct
 
-from typing import Any, Dict, List
+from typing import Any, List
 
 from qtoggleserver.lib import ble
 
@@ -86,7 +86,7 @@ class BluetoothMPPSolarInverter(MPPSolarInverter, ble.BLEPeripheral):
         self._properties['pv_voltage'] = pv_voltage / 10
         self._properties['pv_power'] = pv_power
 
-    async def make_port_args(self) -> List[Dict[str, Any]]:
+    async def make_port_args(self) -> list[dict[str, Any]]:
         return [
             {
                 'driver': NumberPort,

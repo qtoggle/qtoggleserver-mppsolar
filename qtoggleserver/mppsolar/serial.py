@@ -5,7 +5,7 @@ import logging
 import math
 import re
 
-from typing import Any, Dict, List, Optional, Set, Type
+from typing import Any, Optional, Type
 
 from qtoggleserver.utils import json as json_utils
 
@@ -52,7 +52,7 @@ class SerialMPPSolarInverter(MPPSolarInverter):
         *,
         serial_port: str,
         serial_baud: int = DEFAULT_BAUD,
-        blacklist_properties: Optional[List[str]] = None,
+        blacklist_properties: Optional[list[str]] = None,
         force_battery_discharge_min_soc: Optional[int] = None,
         force_battery_charge_grid_min_voltage: Optional[int] = None,
         **kwargs
@@ -60,11 +60,11 @@ class SerialMPPSolarInverter(MPPSolarInverter):
 
         self._serial_port: str = serial_port
         self._serial_baud: int = serial_baud
-        self._blacklist_properties: Set[str] = set(blacklist_properties or [])
+        self._blacklist_properties: set[str] = set(blacklist_properties or [])
         self._force_battery_discharge_min_soc: Optional[int] = force_battery_discharge_min_soc
         self._force_battery_charge_min_grid_voltage: Optional[int] = force_battery_charge_grid_min_voltage
-        self._setter_command_classes_by_property: Dict[str, List[Type[commands.Command]]] = {}
-        self._choices_by_property: Dict[str, List[Dict[str, Any]]] = {}
+        self._setter_command_classes_by_property: dict[str, list[type[commands.Command]]] = {}
+        self._choices_by_property: dict[str, list[dict[str, Any]]] = {}
         self._command_lock: asyncio.Lock = asyncio.Lock()
 
         super().__init__(**kwargs)
@@ -79,7 +79,7 @@ class SerialMPPSolarInverter(MPPSolarInverter):
         else:
             return SerialIO(self._serial_port, self._serial_baud)
 
-    async def run_command(self, io: BaseIO, cls: Type[commands.Command], **params) -> Properties:
+    async def run_command(self, io: BaseIO, cls: type[commands.Command], **params) -> Properties:
         params = dict(params, **self.prepare_command_params(cls))
         if params:
             params_str = ', '.join(f'{k}={json_utils.dumps(v)}' for k, v in params.items())
@@ -104,7 +104,7 @@ class SerialMPPSolarInverter(MPPSolarInverter):
 
         return parsed_response
 
-    def prepare_command_params(self, cmd: Type[commands.Command]) -> Properties:
+    def prepare_command_params(self, cmd: type[commands.Command]) -> Properties:
         return cmd.REQUEST_DEFAULT_VALUES
 
     async def read_properties(self) -> None:
@@ -226,7 +226,7 @@ class SerialMPPSolarInverter(MPPSolarInverter):
         finally:
             await self.run_command(io, cls, battery_back_to_charging_voltage=battery_back_to_charging_voltage)
 
-    async def make_port_args(self) -> List[Dict[str, Any]]:
+    async def make_port_args(self) -> list[dict[str, Any]]:
         # All available command classes for this inverter model
         cmd_classes = commands.get_command_classes(self._model)
 

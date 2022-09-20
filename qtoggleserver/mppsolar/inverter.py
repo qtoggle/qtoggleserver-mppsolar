@@ -3,7 +3,7 @@ import abc
 import asyncio
 import logging
 
-from typing import Dict, Optional
+from typing import Optional
 
 from qtoggleserver.lib.polled import PolledPeripheral
 
@@ -30,7 +30,7 @@ class MPPSolarInverter(PolledPeripheral, metaclass=abc.ABCMeta):
     ) -> None:
 
         self._model: str = model
-        self._properties: Dict[str, Property] = {}
+        self._properties: dict[str, Property] = {}
 
         super().__init__(**kwargs)
 

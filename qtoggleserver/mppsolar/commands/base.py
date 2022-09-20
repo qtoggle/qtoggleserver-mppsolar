@@ -2,7 +2,7 @@
 import ctypes
 import re
 
-from typing import Optional, Tuple
+from typing import Optional
 
 from ..exceptions import MPPSolarException
 from ..typing import Properties, PropertyDefinitions
@@ -35,7 +35,7 @@ class Command:
         'str': str
     }
 
-    _response_regex: Optional[Tuple[Optional[re.Pattern], re.Pattern]] = None
+    _response_regex: Optional[tuple[Optional[re.Pattern], re.Pattern]] = None
     _request_property_definitions: Optional[PropertyDefinitions] = None
     _response_property_definitions: Optional[PropertyDefinitions] = None
 
@@ -151,7 +151,7 @@ class Command:
         return False
 
     @classmethod
-    def get_response_regex(cls) -> Tuple[Optional[re.Pattern], re.Pattern]:
+    def get_response_regex(cls) -> tuple[Optional[re.Pattern], re.Pattern]:
         if cls._response_regex is None:
             pat = cls.RESPONSE_FMT
             is_list = False

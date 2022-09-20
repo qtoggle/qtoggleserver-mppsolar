@@ -1,8 +1,8 @@
 
-from typing import Any, Dict, Union
+from typing import Any, Union
 
 
 Property = Union[str, int, float, bool]
-Properties = Dict[str, Property]
-PropertyDefinition = Dict[str, Dict[str, Any]]
-PropertyDefinitions = Dict[str, PropertyDefinition]
+Properties = dict[str, Property]
+PropertyDefinition = dict[str, dict[str, Any]]
+PropertyDefinitions = dict[str, PropertyDefinition]
