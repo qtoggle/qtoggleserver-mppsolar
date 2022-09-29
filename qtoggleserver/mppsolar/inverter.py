@@ -39,7 +39,6 @@ class MPPSolarInverter(PolledPeripheral, metaclass=abc.ABCMeta):
     async def poll(self) -> None:
         try:
             await self.read_properties()
-
         except asyncio.TimeoutError as e:
             raise MPPSolarTimeout('Timeout reading inverter status') from e
 
