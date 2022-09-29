@@ -1,4 +1,3 @@
-
 from .base import Command
 
 from qtoggleserver.mppsolar import constants

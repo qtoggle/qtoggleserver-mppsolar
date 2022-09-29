@@ -1,9 +1,8 @@
-
 import abc
 import logging
 import struct
 
-from typing import Any, List
+from typing import Any
 
 from qtoggleserver.lib import ble
 

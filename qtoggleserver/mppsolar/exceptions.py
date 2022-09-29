@@ -1,4 +1,3 @@
-
 class MPPSolarException(Exception):
     pass
 

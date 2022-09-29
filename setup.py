@@ -1,4 +1,3 @@
-
 from setuptools import setup, find_namespace_packages
 
 
@@ -15,6 +14,5 @@ setup(
     install_requires=[
         'pyserial>=3.4',
         'pyserial-asyncio>=0.4',
-        'bleak',
     ]
 )

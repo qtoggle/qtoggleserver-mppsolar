@@ -1,11 +1,10 @@
-
 import asyncio
 import contextlib
 import logging
 import math
 import re
 
-from typing import Any, Optional, Type
+from typing import Any, Optional
 
 from qtoggleserver.utils import json as json_utils
 

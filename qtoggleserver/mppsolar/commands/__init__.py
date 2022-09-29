@@ -1,6 +1,3 @@
-
-from typing import Type
-
 from .base import Command
 from .mchgc import MCHGC
 from .mnchgc import MNCHGC_Parallel, MNCHGC_Single

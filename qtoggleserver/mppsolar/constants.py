@@ -1,4 +1,3 @@
-
 MODE_POWER_ON = 'P'
 MODE_STANDBY = 'S'
 MODE_GRID = 'L'

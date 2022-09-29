@@ -1,4 +1,3 @@
-
 from .serial import SerialMPPSolarInverter
 from .bluetooth import BluetoothMPPSolarInverter
 
