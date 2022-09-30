@@ -56,14 +56,14 @@ class Command:
         if not response.endswith(b'\r'):
             raise ResponseError(f'Unexpected response end: {response}')
 
-        response = response[:-1]  # Get rid of terminal '\r'
+        response = response[:-1]  # get rid of terminal '\r'
 
         crc = response[-2:]
         response = response[:-2].decode()
         if self.compute_crc(response) != crc:
             raise ResponseError(f'Wrong CRC: {response} {repr(crc)[2:-1]}')
 
-        response = response[1:]  # Get rid of start byte '('
+        response = response[1:]  # get rid of start byte '('
 
         split_pat, values_pat = self.get_response_regex()
         if split_pat:
