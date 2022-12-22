@@ -12,9 +12,6 @@ from .inverter import MPPSolarInverter
 from .typing import Property
 
 
-logger = logging.getLogger(__name__)
-
-
 class BluetoothPort(ble.BLEPort, metaclass=abc.ABCMeta):
     READ_INTERVAL_MAX = 86400
     READ_INTERVAL_STEP = 1
@@ -38,7 +35,7 @@ class BluetoothMPPSolarInverter(MPPSolarInverter, ble.BLEPeripheral):
     STATUS2_HANDLE = 0x0020
     PV1_STATUS_HANDLE = 0x0042
 
-    logger = logger
+    logger = logging.getLogger(__name__)
 
     async def read_properties(self) -> None:
         data = await self.read(self.STATUS1_HANDLE)

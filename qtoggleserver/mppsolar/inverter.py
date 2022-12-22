@@ -10,16 +10,13 @@ from .exceptions import MPPSolarTimeout
 from .typing import Property
 
 
-logger = logging.getLogger(__name__)
-
-
 class MPPSolarInverter(PolledPeripheral, metaclass=abc.ABCMeta):
     DEFAULT_POLL_INTERVAL = 5
     RETRY_POLL_INTERVAL = 5
 
     TIMEOUT = 10
 
-    logger = logger
+    logger = logging.getLogger(__name__)
 
     def __init__(
         self,

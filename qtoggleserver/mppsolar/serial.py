@@ -15,9 +15,6 @@ from .ports import BooleanPort, NumberPort, StringPort
 from .typing import Properties, Property
 
 
-logger = logging.getLogger(__name__)
-
-
 class SerialMPPSolarInverter(MPPSolarInverter):
     DEFAULT_BAUD = 2400
     CMD_WAIT = 0.5  # seconds
@@ -44,7 +41,7 @@ class SerialMPPSolarInverter(MPPSolarInverter):
         'is_scc_firmware_updated',
     }
 
-    logger = logger
+    logger = logging.getLogger(__name__)
 
     def __init__(
         self,
