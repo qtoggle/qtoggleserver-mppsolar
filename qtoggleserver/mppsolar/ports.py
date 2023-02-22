@@ -2,6 +2,7 @@ import abc
 
 from typing import Any, cast, Optional
 
+from qtoggleserver.core import ports as core_ports
 from qtoggleserver.core.typing import NullablePortValue, PortValue
 from qtoggleserver.lib.polled import PolledPort
 
@@ -26,6 +27,7 @@ class MPPSolarPort(PolledPort, metaclass=abc.ABCMeta):
     async def read_value(self) -> NullablePortValue:
         return self.get_peripheral().get_property(self._property_name)
 
+    @core_ports.skip_write_unavailable
     async def write_value(self, value: PortValue) -> None:
         await self.get_peripheral().set_property(self._property_name, value)
 
