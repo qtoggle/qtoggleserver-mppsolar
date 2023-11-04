@@ -187,6 +187,16 @@ class QPIGS_MAX(QPIGS):
         '{is_dustproof_installed:b}'
     )
 
-    VIRTUAL_PROPERTIES = {
-        'pv_power': None,
-    }
+    UNITS = dict(QPIGS.UNITS, **{
+        'pv1_current': 'A',
+        'pv1_voltage': 'V',
+        'pv1_power': 'W'
+    })
+
+    DISPLAY_NAMES = dict(QPIGS.DISPLAY_NAMES, **{
+        'pv1_current': 'PV1 Current',
+        'pv1_voltage': 'PV1 Voltage',
+        'pv1_power': 'PV1 Power'
+    })
+
+    VIRTUAL_PROPERTIES = {}

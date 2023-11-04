@@ -12,7 +12,8 @@ from .typing import Property
 
 class MPPSolarInverter(PolledPeripheral, metaclass=abc.ABCMeta):
     DEFAULT_POLL_INTERVAL = 5
-    RETRY_POLL_INTERVAL = 5
+    DEFAULT_RETRY_POLL_INTERVAL = 5
+    DEFAULT_RETRY_COUNT = 2
 
     TIMEOUT = 10
 
