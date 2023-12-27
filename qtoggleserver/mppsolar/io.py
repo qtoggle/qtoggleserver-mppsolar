@@ -1,6 +1,7 @@
-import asyncio
 import abc
+import asyncio
 import os
+
 import serial
 
 

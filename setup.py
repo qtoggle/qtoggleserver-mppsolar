@@ -13,6 +13,5 @@ setup(
 
     install_requires=[
         'pyserial>=3.4',
-        'pyserial-asyncio>=0.4',
     ]
 )
