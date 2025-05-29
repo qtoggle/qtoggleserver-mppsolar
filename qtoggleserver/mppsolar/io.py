@@ -15,10 +15,10 @@ class BaseIO(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     async def read(self, timeout: int) -> bytes:
-        data = b''
+        data = b""
         for _ in range(timeout * 10):
             data += self.read_available()
-            if data.endswith(b'\r'):
+            if data.endswith(b"\r"):
                 break
 
             await asyncio.sleep(0.1)
@@ -53,7 +53,7 @@ class SerialIO(BaseIO):
         if in_waiting:
             return self._serial.read(in_waiting)
 
-        return b''
+        return b""
 
     def write(self, data: bytes) -> None:
         self._serial.write(data)

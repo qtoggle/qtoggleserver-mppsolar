@@ -1,6 +1,6 @@
 import abc
 
-from typing import Any, cast, Optional
+from typing import Any, cast
 
 from qtoggleserver.core import ports as core_ports
 from qtoggleserver.core.typing import NullablePortValue, PortValue
@@ -33,23 +33,23 @@ class MPPSolarPort(PolledPort, metaclass=abc.ABCMeta):
 
 
 class BooleanPort(MPPSolarPort):
-    TYPE = 'boolean'
+    TYPE = "boolean"
 
 
 class NumberPort(MPPSolarPort):
-    TYPE = 'number'
+    TYPE = "number"
 
-    def __init__(self, *, unit: Optional[str] = None, choices: Optional[list[dict[str, Any]]] = None, **kwargs) -> None:
+    def __init__(self, *, unit: str | None = None, choices: list[dict[str, Any]] | None = None, **kwargs) -> None:
         super().__init__(**kwargs)
 
-        self._unit: Optional[str] = unit
-        self._choices: Optional[list[dict[str, Any]]] = choices
+        self._unit: str | None = unit
+        self._choices: list[dict[str, Any]] | None = choices
 
 
 class StringPort(MPPSolarPort):
-    TYPE = 'number'
+    TYPE = "number"
 
-    def __init__(self, *, unit: Optional[str] = None, choices: list[dict[str, Any]], **kwargs) -> None:
+    def __init__(self, *, unit: str | None = None, choices: list[dict[str, Any]], **kwargs) -> None:
         super().__init__(**kwargs)
 
         # Associate a number to each choice value, since we can't deal with string values
@@ -58,9 +58,9 @@ class StringPort(MPPSolarPort):
         for i, choice in enumerate(choices):
             adapted_choice = dict(choice, value=i)
             adapted_choices.append(adapted_choice)
-            self._value_mapping[choice['value']] = i
+            self._value_mapping[choice["value"]] = i
 
-        self._unit: Optional[str] = unit
+        self._unit: str | None = unit
         self._choices: list[dict[str, Any]] = adapted_choices
 
     async def read_value(self) -> NullablePortValue:

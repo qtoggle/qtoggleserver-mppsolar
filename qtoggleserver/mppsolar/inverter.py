@@ -2,8 +2,6 @@ import abc
 import asyncio
 import logging
 
-from typing import Optional
-
 from qtoggleserver.lib.polled import PolledPeripheral
 
 from .exceptions import MPPSolarTimeout
@@ -19,13 +17,7 @@ class MPPSolarInverter(PolledPeripheral, metaclass=abc.ABCMeta):
 
     logger = logging.getLogger(__name__)
 
-    def __init__(
-        self,
-        *,
-        model: str,
-        **kwargs
-    ) -> None:
-
+    def __init__(self, *, model: str, **kwargs) -> None:
         self._model: str = model
         self._properties: dict[str, Property] = {}
 
@@ -38,9 +30,9 @@ class MPPSolarInverter(PolledPeripheral, metaclass=abc.ABCMeta):
         try:
             await self.read_properties()
         except asyncio.TimeoutError as e:
-            raise MPPSolarTimeout('Timeout reading inverter status') from e
+            raise MPPSolarTimeout("Timeout reading inverter status") from e
 
-    def get_property(self, name: str) -> Optional[Property]:
+    def get_property(self, name: str) -> Property | None:
         return self._properties.get(name)
 
     async def set_property(self, name: str, value: Property) -> None:
