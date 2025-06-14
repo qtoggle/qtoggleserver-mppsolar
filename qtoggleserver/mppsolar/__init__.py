@@ -4,4 +4,4 @@ from .serial import SerialMPPSolarInverter
 
 __all__ = ["BluetoothMPPSolarInverter", "SerialMPPSolarInverter"]
 
-VERSION = "unknown-version"
+VERSION = "0.0.0"
