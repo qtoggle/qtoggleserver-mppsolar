@@ -1,5 +1,7 @@
-from .serial import SerialMPPSolarInverter
 from .bluetooth import BluetoothMPPSolarInverter
+from .serial import SerialMPPSolarInverter
 
 
-VERSION = 'unknown-version'
+__all__ = ["BluetoothMPPSolarInverter", "SerialMPPSolarInverter"]
+
+VERSION = "0.0.0"
