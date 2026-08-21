@@ -1,7 +1,7 @@
-from typing import Any, TypeAlias, Union
+from typing import Any
 
 
-Property: TypeAlias = Union[str, int, float, bool]
-Properties: TypeAlias = dict[str, Property]
-PropertyDefinition: TypeAlias = dict[str, dict[str, Any]]
-PropertyDefinitions: TypeAlias = dict[str, PropertyDefinition]
+type Property = str | int | float | bool
+type Properties = dict[str, Property]
+type PropertyDefinition = dict[str, dict[str, Any]]
+type PropertyDefinitions = dict[str, PropertyDefinition]

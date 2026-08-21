@@ -38,7 +38,6 @@ class SerialMPPSolarInverter(MPPSolarInverter):
         "eeprom_version",
         "is_dustproof_installed",
         "is_turned_on",
-        "is_scc_firmware_updated",
     }
 
     logger = logging.getLogger(__name__)
@@ -204,7 +203,7 @@ class SerialMPPSolarInverter(MPPSolarInverter):
             self.warning("cannot force battery mode: battery back-to-charging voltage not available")
             return
 
-        temp_value = int(math.ceil(battery_voltage))
+        temp_value = math.ceil(battery_voltage)
         if temp_value == battery_voltage:
             temp_value += 1
 
